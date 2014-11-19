@@ -1,4 +1,4 @@
-function [ R,B,seeds ] = generate_heart( sz, center, axis, rays, width, Nseeds)
+function [ R,B,seeds ] = generate_heart( sz, center, axis, rays, width, Nseeds,sizeblur)
 
 % generate a synthetic heart, its segmentation and some seeds
 
@@ -26,32 +26,32 @@ B = (abs(e-1)<width);
 noise=0.1*randn(size(B));
 bias =zeros(size(B));
 
-R = gaussian_blur_3d(B,7)+ noise + bias; % blur(B)
+R = gaussian_blur_3d(B,sizeblur)+ noise + bias; % blur(B)
 
 
 % Seeds
 seeds=zeros(2,Nseeds,3);
 
-M =  diag(1 ./ rays)*axis;
+M =  axis'*diag(rays);
 for k=1:2:Nseeds
     r=randn(3,1);
     r=r/norm(r);
-    seeds(1,k,:)=center'+(1-1.1*width)*M*r;
+    seeds(1,k,:)=center'+sqrt(1-2*width)*M*r;
 end
 for k=2:2:Nseeds
     r=randn(3,1);
     r=r/norm(r);
-    seeds(1,k,:)=center'+(1+1.1*width)*M*r;
+    seeds(1,k,:)=center'+sqrt(1+2*width)*M*r;
 end
 for k=1:2:Nseeds
     r=randn(3,1);
     r=r/norm(r);
-    seeds(2,k,:)=center'+(1-0.9*width)*M*r;
+    seeds(2,k,:)=center'+sqrt(1-0.4*width)*M*r;
 end
 for k=2:2:Nseeds
     r=randn(3,1);
     r=r/norm(r);
-    seeds(2,k,:)=center'+(1+0.9*width)*M*r;
+    seeds(2,k,:)=center'+sqrt(1+0.4*width)*M*r;
 end
 
 

@@ -2,6 +2,9 @@ function [ I ] = gaussian_blur_3d(I,n)
 
 % flou gaussien isotrope sur une image 3d
 % sigma=n/7
+if n==0
+    return;
+end
 
 sigma=n/7;
 x = ( (0:n-1)-(n-1)/2 );
@@ -16,7 +19,7 @@ Gx(:,1,1)=f;
 Gy(1,:,1)=f;
 Gz(1,1,:)=f;
 
-I = convn(I,Gx); %convolution in x
-I = convn(I,Gy); %convolution in y
-I = convn(I,Gz); %convolution in z
+I = convn(I,Gx,'same'); %convolution in x
+I = convn(I,Gy,'same'); %convolution in y
+I = convn(I,Gz,'same'); %convolution in z
 end
