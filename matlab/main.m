@@ -14,6 +14,7 @@
 
 %% Paramètres
 Dice_threshold=0.5;
+Nseeds = 6;
 
 
 %% Lecture des données
@@ -22,7 +23,7 @@ c = [50 50 30];
 ax1 = [1 1 0];
 ax2 = [-1 1 0];
 ax3 = [0 0 1];
-axes = [X1/sqrt(sum(X1.*X1)) ; X2/sqrt(sum(X2.*X2)) ; X3/sqrt(sum(X3.*X3))];
+axes = [ax1/sqrt(sum(ax1.*ax1)) ; ax2/sqrt(sum(ax2.*ax2)) ; ax3/sqrt(sum(ax3.*ax3))];
 rays = [40 20 5];
 
 [R,B,~] = generate_heart(sz, c, axes, rays,0.3,Nseeds,3);
