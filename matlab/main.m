@@ -22,13 +22,13 @@ gamma = 0.4;
 
 
 %% Lecture des données
-sz = [100 100 100]/5;
-c = [50 50 30]/5;
+sz = [100 100 100]/2;
+c = [50 50 30]/2;
 ax1 = [1 1 0];
 ax2 = [-1 1 0];
 ax3 = [0 0 1];
 axes = [ax1/sqrt(sum(ax1.*ax1)) ; ax2/sqrt(sum(ax2.*ax2)) ; ax3/sqrt(sum(ax3.*ax3))];
-rays = [40 20 5]/5;
+rays = [40 20 5]/2;
 
 [R,B,~] = generate_heart(sz, c, axes, rays,0.3,Nseeds,3);
 
@@ -56,7 +56,7 @@ if 0
     %roi=min(512,max(1,[xg-dx,xg+dx,yg-dy,yg+dy]));
     roi=[xg-dx,xg+dx,yg-dy,yg+dy];
     if (any(roi<1) || any(roi>512))
-        disp('Your argument is invalid\n');
+        fprintf('Your argument is invalid\n');
         return;
     end
 
@@ -81,11 +81,15 @@ for k=1:size(R,1)
     end
     
 end
-    
+ 
 if D_max>Dice_threshold
-    disp('Best segmentation with driver '+int2str(indx)+'\nDice metrix='+num2str(D_max)+'\n')
+    fprintf(['Best segmentation with driver ',int2str(indx),'\nDice metrix=',num2str(D_max),'\n'])
     %implay(Xopt);
 else
-    disp('No matching subject found\nPerforming conventional Random Walks\n');
+    fprintf('No matching subject found\nPerforming conventional Random Walks\n');
     %Xopt=Random_Walks(I);  
 end
+
+% Display
+implay(B_k,5);
+implay((Xopt>0.5),5);
