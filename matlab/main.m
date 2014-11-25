@@ -71,7 +71,7 @@ I=I0;
 for k=1:size(R,1)
     R_k=squeeze(R(k,:,:,:));
     B_k=squeeze(B(k,:,:,:));
-    X_k=Guided_Random_Walks(I,R_k,B_k,seeds_k,alpha,beta,gamma);
+    X_k=Guided_Random_Walks(I,R_k,B_k,seeds,alpha,beta,gamma);
     D_k=Dice(X_k,B_k);
     
     if D_k>D_max
