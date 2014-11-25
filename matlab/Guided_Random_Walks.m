@@ -6,7 +6,7 @@ function X_k = Guided_Random_Walks(I,R,B,seeds,alpha,beta,gamma)
 % - efficaité
 
 
-% Guided_Random_Walk - segmente l'image I en utilisant le driver (R,B)
+% Guided_Random_Walk - segmente l'image I en utilisant le driver (R,Bcl)
 
 sz=size(I);
 v_sub2ind=[1,sz(1),sz(1)*sz(2)];
