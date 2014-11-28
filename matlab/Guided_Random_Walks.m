@@ -17,7 +17,14 @@ disp(['Starting guided random walks N=',int2str(N)]);
 % 6-voisinage
 sub_c_II= [1,0,0;-1,0,0;0,1,0;0,-1,0;0,0,1;0,0,-1]              + 2;
 c_II =    sub2ind(sz,sub_c_II(:,1),sub_c_II(:,2),sub_c_II(:,3)) - sub2ind(sz,2,2,2) ; % pdt scalR with v ?
-c_IR = [c_II;0]; %ind_c_IR=[c_II;0,0,0];
+c_IR = [c_II; 0 - sub2ind(sz,2,2,2)];
+
+% 26-voisinage
+%sub_c_II= [1,0,0 ; -1,0,0 ; 0,1,0 ; 1,1,0 ; -1,1,0 ; 0,-1,0 ; 1,-1,0 ; -1,-1,0;...
+%           1,0,1 ; -1,0,1 ; 0,1,1 ; 1,1,1 ; -1,1,1 ; 0,-1,1 ; 1,-1,1 ; -1,-1,1; 0,0,1 ...
+%           1,0,-1 ; -1,0,-1 ; 0,1,-1 ; 1,1,-1 ; -1,1,-1 ; 0,-1,-1 ; 1,-1,-1 ; -1,-1,-1; 0,0,-1] +2 ;
+%c_II =    sub2ind(sz,sub_c_II(:,1),sub_c_II(:,2),sub_c_II(:,3)) - sub2ind(sz,2,2,2) ; % pdt scalR with v ?
+%c_IR = [c_II; 0 - sub2ind(sz,2,2,2)];
 
     function [W,O,L,A]=weights_matrices(I,R,N,c_II,c_IR,alpha,beta)
         % compute the W and the Omega matrices
