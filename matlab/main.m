@@ -13,41 +13,21 @@
 %   - same mean in each image
 
 %% Paramètres
-Dice_threshold=0.5;
-<<<<<<< HEAD
+Dice_threshold=0.5; 
 seg_threshold=0.5; % Threshold to turn the result into binaries
-Nseeds = 6;
-=======
 Nseeds = 12;
->>>>>>> b3c60616e242997f36cf9b3a543b3fe5afb37980
 
 alpha = 90 /100;
 beta  = 130/100;
 gamma = 0.4;
 
 
-%% Lecture des données
-sz = [100 100 100];
-c = [50 50 30];
-ax1 = [1 1 0];
-ax2 = [-1 1 0];
-ax3 = [0 0 1];
-axes = [ax1/sqrt(sum(ax1.*ax1)) ; ax2/sqrt(sum(ax2.*ax2)) ; ax3/sqrt(sum(ax3.*ax3))];
-rays = [40 20 5];
-
-
-% Drivers generation
-R=zeros([2,sz]);
-B=zeros([2,sz]);
-
-for k=1:size(R,1)
-[Rk,Bk,~] = generate_heart(sz, c, axes, rays,0.3,0,3);
-R(k,:,:,:)=Rk;
-B(k,:,:,:)=Bk;
-end
-
-% Patient to segment
-[I0,B0,seeds] = generate_heart(sz, c, axes, rays,0.3,Nseeds,3);
+%% Lecture des données :
+% drivers : R, B,
+% patient à segmenter : I, B0 et seeds
+load('data.mat'); 
+sz=size(R);
+sz=sz(2:end);
 
 
 %% Initialisation
@@ -77,7 +57,6 @@ if 0
 end
 end
 
-I=I0;
 
 %% Main loop on drivers
 for k=1:size(R,1)
@@ -91,7 +70,7 @@ for k=1:size(R,1)
         indx=k;
         Xopt=X_k;
     end
-    fprintf(['Dice index ',num2str(D_k)]);
+    fprintf(['Dice index ',num2str(D_k),'\n']);
     
 end
  
