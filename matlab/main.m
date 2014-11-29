@@ -14,8 +14,12 @@
 
 %% Paramètres
 Dice_threshold=0.5;
+<<<<<<< HEAD
 seg_threshold=0.5; % Threshold to turn the result into binaries
 Nseeds = 6;
+=======
+Nseeds = 12;
+>>>>>>> b3c60616e242997f36cf9b3a543b3fe5afb37980
 
 alpha = 90 /100;
 beta  = 130/100;
@@ -23,19 +27,26 @@ gamma = 0.4;
 
 
 %% Lecture des données
-sz = [100 100 100]/2;
-c = [50 50 30]/2;
+sz = [100 100 100];
+c = [50 50 30];
 ax1 = [1 1 0];
 ax2 = [-1 1 0];
 ax3 = [0 0 1];
 axes = [ax1/sqrt(sum(ax1.*ax1)) ; ax2/sqrt(sum(ax2.*ax2)) ; ax3/sqrt(sum(ax3.*ax3))];
-rays = [40 20 5]/2;
+rays = [40 20 5];
 
-[R,B,~] = generate_heart(sz, c, axes, rays,0.3,Nseeds,3);
 
-R=reshape(R,[1,sz]);
-B=reshape(B,[1,sz]);
+% Drivers generation
+R=zeros([2,sz]);
+B=zeros([2,sz]);
 
+for k=1:size(R,1)
+[Rk,Bk,~] = generate_heart(sz, c, axes, rays,0.3,0,3);
+R(k,:,:,:)=Rk;
+B(k,:,:,:)=Bk;
+end
+
+% Patient to segment
 [I0,B0,seeds] = generate_heart(sz, c, axes, rays,0.3,Nseeds,3);
 
 
@@ -73,13 +84,14 @@ for k=1:size(R,1)
     R_k=squeeze(R(k,:,:,:));
     B_k=squeeze(B(k,:,:,:));
     X_k=Guided_Random_Walks(I,R_k,B_k,seeds,alpha,beta,gamma);
-    D_k=Dice(X_k,B_k);
+    D_k=Dice((X_k>0.5),B_k);
     
     if D_k>D_max
         D_max=D_k;
         indx=k;
         Xopt=X_k;
     end
+    fprintf(['Dice index ',num2str(D_k)]);
     
 end
  
