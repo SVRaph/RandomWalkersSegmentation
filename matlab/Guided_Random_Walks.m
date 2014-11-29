@@ -1,13 +1,7 @@
 function X_k = Guided_Random_Walks(I,R,B,seeds,alpha,beta,gamma)
 
-%% TODO 
-% - commentaires
-% - correction erreurs présentes dans l'article
-% - efficaité
-
 
 % Guided_Random_Walk - segmente l'image I en utilisant le driver (R,Bcl)
-
 sz=size(I);
 v_sub2ind=[1,sz(1),sz(1)*sz(2)];
 N=sz(1)*sz(2)*sz(3);
@@ -95,7 +89,7 @@ xm=[zeros(size(indM1,1),1);ones(size(indM1,1),1)];
 
 
 MA = Lu+gamma*Au;
-Mb = gamma*Omegab'*bm + gamma*Omegau*bu - Lb'*xm + gamma*Ab'*xm;
+Mb = (gamma/2)*Omegab'*bm + (gamma/2)*Omegau*bu - Lb'*xm - gamma*Ab'*xm;
 
 disp('Sparse linear system created');
 
