@@ -14,6 +14,7 @@
 
 %% Paramètres
 Dice_threshold=0.5;
+seg_threshold=0.5; % Threshold to turn the result into binaries
 Nseeds = 6;
 
 alpha = 90 /100;
@@ -92,4 +93,6 @@ end
 
 % Display
 implay(B_k,5);
-implay((Xopt>0.5),5);
+implay((Xopt>seg_threshold),5);
+
+color_result = show_boundaries(I0,B0,Xopt,seg_threshold);
