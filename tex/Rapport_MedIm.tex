@@ -1,0 +1,90 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc} % accents
+\usepackage[T1]{fontenc} % caractères français
+\usepackage{geometry} % marges
+\usepackage[french]{babel} % langue
+\usepackage{graphicx} % images
+\usepackage{verbatim} % texte préformaté
+\usepackage{amsmath}
+\usepackage{amsfonts} %mathbb
+
+\newcommand{\R}{\mathbb{R}}
+
+\title{Imagérie médicale - Projet \\ - \\ \small{Segmentation by retriveal with guided random walks: Application to left ventricle segmentation in MRI \\ A.Eslami A.Karamalis A.Katouzian N.Navab}} 
+\author{Marie \textsc{Rozand}, Alexandre \textsc{Sarrazin} et Raphaël \textsc{Sivera}}
+ 
+% \pagestyle{headings} % affiche un rappel discret (en haut à gauche)
+% de la partie dans laquel on se situe
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Dans cet article une nouvelle méthode de segmentation est présentée puis appliquée à la délimitation du ventricule gauche dans des séquences IRM.
+
+La construction d'un a priori de forme statistique est parfois difficile et son utilisation peu adapté à la présence de cas extrême. Il s'agit donc ici d'utiliser directement la connaissance contenue dans une base de données d'images segmentées. Afin de garder un maximum de variabilité, ils utilisent cette base de données pour guider un algorithme de marche aléatoire.
+
+
+\section{Prior work}
+
+\section{Technical content}
+
+\subsection{Guided random walk}
+
+Si notre image contient des pixels déjà étiquettés (\textit{seeds}), la probabilité qu'une marche aléatoire partant d'un pixel atteigne un pixel avec tel ou tel label en premier définit une segmentation de l'image. Les probabilités de transition $w_{ij}$ entre deux pixels adjacents sont définies les caractéristiques de l'image (gradient de l'intensité, etc.).
+
+On peut montrer le calcul des probabilités peut se ramener à un problème d'optimisation quadratique de l'énergie : 
+$$ E(x)= \frac{1}{2} \sum_{i,j}{w_{ij} (x_i -x_j)^2} $$
+
+S'il n'est pas facile de modifier directement les probabilités pour tenir compte d'une connaissance a priori, il est aisé de modifier la formulation variationnelle. On cherche donc à miniser :
+$$ E(x)= \frac{1}{2} \sum_{i,j}{w_{ij} (x_i -x_j)^2} + \frac{\gamma}{2} \sum_{i,j}{\omega_{ij} (x_i -b_j)^2}$$
+
+où l'on définit $I_i$ l'intensité de l'image au pixel $i^$, $R_i$ l'intensité de l'image guide en $i$, $b_i$ le label du pixel $i$ de l'image $R$ ainsi que :
+\begin{align*}
+w_{ij} &= \exp(-\beta(I_i-I_j)^2) \text{ si $j$ est dans le voisinage intra-image de $i$} \\
+      &= 0 \text{ sinon}\\
+\omega_{ij} &= \exp(-\alpha(I_i-R_j)^2) \text{ si $j$ est dans le voisinage inter-images de $i$}\\
+           &= 0 \text{ sinon}\\
+\end{align}
+
+La solution à ce problème de minimisation est explicite et revient à résoudre un système linéaire parcimonieux.
+
+\subsection{Segmentation by retrival}
+
+L'algorithme consiste à appliquer l'algorithme de \textit{guided random walk} pour chaque image présente dans la database. Pour sélectionner la segmentation à garder on compare la segmentation obtenue en seuillant le champs de probabilité $x$ à la segmentation de l'image guide. Si la distance de Dice est minimale cela signifie que les deux images se ressemblent, on garde alors la segmentation obtenue avec cette référence.
+
+
+\section{Résultats}
+
+Cette méthode dépend de nombreux paramètres. Pour optimiser la méthode nous avons étudié l’efficacité de la segmentation en faisant varier ces paramètres.
+	Tout d’abord, il y a trois paramètres qui contrôlent l’algorithme de marche aléatoire guidée : $\alpha$, $\beta$ et $\gamma$. Le paramètre $\gamma$ jauge de l’influence des images de la base d’image segmentée pour segmenter la nouvelle image. Si $\gamma=0$, l’algorithme se résume à une simple marche aléatoire. Plus il est grand, plus l’influence des connaissances a priori sont prises en compte. Le paramètre $\alpha$ définit la sensibilité à la variation d’intensité au sein de chaque classe dans l’image à segmenter. Le paramètre $\beta$ définit la sensibilité de la méthode à la différence d’intensité entre l’image à segmentée et celles de la base de données. L’image n° représente la mesure de Dice pour chaque valeur de paramètre en ramenant la valeur maximale à 100\%. À $\alpha=90$ et $\beta=1.3$ fixés, on voit que le $\gamma$ est optimal aux alentours de 0.3. La précision de la segmentation varie entre 0.2 et 0.4 avec une chute importante pour les valeurs inférieures, nous avons donc choisi de fixer $\gamma=0.4$ pour la suite de notre évaluation.
+	Ensuite, nous avons étudié l’influence du nombre de graines sur la précision de la segmentation. Elles permettent de guider la marche aléatoire mais aussi de cibler la cardioïde à segmenter. L’algorithme compare les images pixels par pixels et est donc très sensible aux décalages des images. Il faut donc centrer toute les images sur les cardioïdes pour maximiser la similarité de l’image avec la base de données. Dans notre cas 
+
+maxDice pour alpha =
+    0.5447	0.1
+    0.5486	0.3
+    0.5596	1
+    0.5799	3
+    0.5892	10
+    0.5649	50
+    0.5582	80
+    0.5553	100
+    0.5495	150
+    0.5462	200
+    0.5422	300
+
+
+
+
+\section{Critiques}
+
+\section{Travaux ultérieurs}
+
+\section{Conclusion}
+
+
+
+\end{document}
