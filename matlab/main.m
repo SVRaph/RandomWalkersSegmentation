@@ -58,7 +58,7 @@ if D_max>Dice_threshold
     %implay(Xopt);
 else
     fprintf('No matching subject found\nPerforming conventional Random Walks\n');
-    %Xopt=Random_Walks(I);  
+    Xopt=Random_Walks(I,seeds,alpha);  
 end
 
 % Test against the true segmentation
