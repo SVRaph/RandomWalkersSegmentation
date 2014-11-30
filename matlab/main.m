@@ -35,28 +35,7 @@ D_max=-1;
 indx=-1;
 X_opt=zeros(sz);
 
-
-%% ROI -- NOT USED
-for i=[]
-if 0
-    g_fg=squeeze(mean(seeds(1,:,:)));
-    g_bg=squeeze(mean(seeds(2,:,:)));
-
-    dx=128;%max(x)-min(x);
-    dy=128;%max(y)-min(y);
-
-    %roi=min(512,max(1,[xg-dx,xg+dx,yg-dy,yg+dy]));
-    roi=[xg-dx,xg+dx,yg-dy,yg+dy];
-    if (any(roi<1) || any(roi>512))
-        fprintf('Your argument is invalid\n');
-        return;
-    end
-
-    I=I0(roi(1):roi(2),roi(3):roi(4));
-    I=I+moyR-mean(I);
-end
-end
-
+%% ROI -- NOT DONE
 
 %% Main loop on drivers
 for k=1:size(R,1)
@@ -82,8 +61,3 @@ else
     %Xopt=Random_Walks(I);  
 end
 
-% Display
-implay(B_k,5);
-implay((Xopt>seg_threshold),5);
-
-color_result = show_boundaries(I0,B0,Xopt,seg_threshold);

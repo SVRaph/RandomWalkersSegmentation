@@ -1,8 +1,6 @@
-function [ colorIm ] = show_boundaries (I0,B0,Xopt,seg_threshold)
+function [ colorIm ] = show_boundaries (I0,B0,Bk)
 
 % show the image with the theoretical and computed segmentation boundaries
-
-Bk=Xopt>0.5;
 [s1,s2,s3] = size(I0);
 colorIm = zeros(s1,s2,3,s3);
 
