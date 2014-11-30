@@ -42,7 +42,7 @@ for k=1:size(R,1)
     R_k=squeeze(R(k,:,:,:));
     B_k=squeeze(B(k,:,:,:));
     X_k=Guided_Random_Walks(I,R_k,B_k,seeds,alpha,beta,gamma);
-    D_k=Dice((X_k>0.5),B_k);
+    D_k=Dice(X_k,B_k);
     
     if D_k>D_max
         D_max=D_k;
@@ -61,3 +61,5 @@ else
     %Xopt=Random_Walks(I);  
 end
 
+% Test against the true segmentation
+% X_k=Guided_Random_Walks(I,I,B0,seeds,alpha,beta,gamma);
