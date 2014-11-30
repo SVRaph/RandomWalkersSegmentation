@@ -17,7 +17,7 @@ Dice_threshold=0.5;
 seg_threshold=0.5; % Threshold to turn the result into binaries
 Nseeds = 12;
 
-alpha = 90 /100;
+alpha = 90;
 beta  = 130/100;
 gamma = 0.4;
 
