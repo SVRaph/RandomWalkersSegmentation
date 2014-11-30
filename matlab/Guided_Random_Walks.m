@@ -76,7 +76,7 @@ indM2=reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
 indM=[indM1;indM2];
 
 logicalM=false(N,1);
-for ilog=1:size(indM,1)
+for i=1:size(indM,1)
     logicalM(round(indM(i)))=true;
 end
 logicalU=not(logicalM);
@@ -103,6 +103,7 @@ xu=pcg(MA,Mb);
 
 X_k=zeros(size(B));
 X_k(logicalU)=xu;
+X_k(logicalM)=xm;
 fprintf('Sparse linear system solved\n');
 
 end
