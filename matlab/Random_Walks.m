@@ -1,4 +1,4 @@
-function X_k = Guided_Random_Walks(I,R,B,seeds,alpha,beta,gamma)
+function X_k = Random_Walks(I,seeds,alpha)
 
 
 % Guided_Random_Walk - segmente l'image I en utilisant le driver (R,Bcl)
@@ -11,19 +11,15 @@ disp(['Starting guided random walks N=',int2str(N)]);
 % 6-voisinage
 sub_c_II= [1,0,0;-1,0,0;0,1,0;0,-1,0;0,0,1;0,0,-1]              + 2;
 c_II =    sub2ind(sz,sub_c_II(:,1),sub_c_II(:,2),sub_c_II(:,3)) - sub2ind(sz,2,2,2) ; % pdt scalR with v ?
-c_IR = [c_II; 0 - sub2ind(sz,2,2,2)];
 
 % 26-voisinage
 %sub_c_II= [1,0,0 ; -1,0,0 ; 0,1,0 ; 1,1,0 ; -1,1,0 ; 0,-1,0 ; 1,-1,0 ; -1,-1,0;...
 %           1,0,1 ; -1,0,1 ; 0,1,1 ; 1,1,1 ; -1,1,1 ; 0,-1,1 ; 1,-1,1 ; -1,-1,1; 0,0,1 ...
 %           1,0,-1 ; -1,0,-1 ; 0,1,-1 ; 1,1,-1 ; -1,1,-1 ; 0,-1,-1 ; 1,-1,-1 ; -1,-1,-1; 0,0,-1] +2 ;
 %c_II =    sub2ind(sz,sub_c_II(:,1),sub_c_II(:,2),sub_c_II(:,3)) - sub2ind(sz,2,2,2) ; % pdt scalR with v ?
-%c_IR = [c_II; 0 - sub2ind(sz,2,2,2)];
 
-    function [W,O,L,A]=weights_matrices(I,R,N,c_II,c_IR,alpha,beta)
+    function [W,L]=weights_matrices(I,N,c_II,alpha)
         % compute the W and the Omega matrices
-        % W=spalloc(N,N,size(c_II,1)*N);
-        % O=spalloc(N,N,size(c_IR,1)*N);
         
         % W
         nzerosmax=size(c_II,1)*N;
@@ -41,34 +37,15 @@ c_IR = [c_II; 0 - sub2ind(sz,2,2,2)];
             end
         end
         W=sparse(v(1:k-1,1),v(1:k-1,2),v(1:k-1,3),N,N,nzerosmax);
-        L=-2*W+spdiags(2*vsum,0,N,N);
-        
-        % Omega
-        nzerosmax=size(c_IR,1)*N;
-        v=zeros(nzerosmax,3);
-        vsum=zeros(N,1);
-        k=1;
-        for i=1:N
-            for l=1:size(c_IR,1)
-                j=i+c_IR(l);
-                if (j >= 1 && j <= N)
-                    v(k,:)=[i,j,exp(-beta*(I(i)-R(j))^2)];
-                    vsum(i)=vsum(i)+v(k,3);
-                    k=k+1;
-                end
-            end
-        end
-        O=sparse(v(1:k-1,1),v(1:k-1,2),v(1:k-1,3),N,N,nzerosmax);
-        A=spdiags(vsum,0,N,N); % Ai=sum(O(i,:)) 
-        
+        L=-2*W+spdiags(2*vsum,0,N,N);      
     end
 
 
 
 % Matrices W, Omega, L, A
-fprintf('Compute W, Omega, L and A...');
-[W,O,L,A]=weights_matrices(I,R,N,c_II,c_IR,alpha,beta);
-fprintf(' done\n');
+fprintf('Compute W, L...');
+[W,L]=weights_matrices(I,N,c_II,alpha);
+fprintf(' done \n');
 
 % Indices Marked et Unmarked
 indM1=reshape(seeds(1,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
@@ -76,33 +53,30 @@ indM2=reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
 indM=[indM1;indM2];
 
 logicalM=false(N,1);
-for ilog=1:size(indM,1)
-    logicalM(round(indM(i)))=true;
+for ii=1:size(indM,1)
+    logicalM(round(indM(ii)))=true;
 end
 logicalU=not(logicalM);
 
 % Système sparse
 Lu=L(logicalU,logicalU);
 Lb=L(logicalM,logicalU);
-Au=A(logicalU,logicalU);
-Ab=A(logicalM,logicalU);
-Omegab=O(logicalM,logicalU);
-Omegau=O(logicalU,logicalU);
 
-bm=B(logicalM);
-bu=B(logicalU);
 xm=[zeros(size(indM1,1),1);ones(size(indM1,1),1)];
 
 
-MA = Lu+gamma*Au;
-Mb = (gamma/2)*Omegab'*bm + (gamma/2)*Omegau*bu - Lb'*xm - gamma*Ab'*xm;
+MA = Lu;
+Mb = - Lb'*xm;
 
-fprintf('Sparse linear system created\n');
+disp('Sparse linear system created');
+
 % solve MA*x=Mb
-xu=pcg(MA,Mb);
+%xu=pcg(MA,Mb,1e-6,100);
+xu=cgs(MA,Mb,1e-6,100);
 
-X_k=zeros(size(B));
+X_k=zeros(size(I));
 X_k(logicalU)=xu;
-fprintf('Sparse linear system solved\n');
+X_k(logicalM)=xm;
+disp('Sparse linear system solved');
 
 end
