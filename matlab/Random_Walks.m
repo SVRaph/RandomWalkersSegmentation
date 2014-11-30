@@ -12,6 +12,7 @@ disp(['Starting guided random walks N=',int2str(N)]);
 sub_c_II= [1,0,0;-1,0,0;0,1,0;0,-1,0;0,0,1;0,0,-1]              + 2;
 c_II =    sub2ind(sz,sub_c_II(:,1),sub_c_II(:,2),sub_c_II(:,3)) - sub2ind(sz,2,2,2) ; % pdt scalR with v ?
 
+
 % 26-voisinage
 %sub_c_II= [1,0,0 ; -1,0,0 ; 0,1,0 ; 1,1,0 ; -1,1,0 ; 0,-1,0 ; 1,-1,0 ; -1,-1,0;...
 %           1,0,1 ; -1,0,1 ; 0,1,1 ; 1,1,1 ; -1,1,1 ; 0,-1,1 ; 1,-1,1 ; -1,-1,1; 0,0,1 ...
@@ -50,29 +51,29 @@ fprintf(' done \n');
 % Indices Marked et Unmarked
 indM1=reshape(seeds(1,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
 indM2=reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
-indM=[indM1;indM2];
+indM=round([indM1;indM2]);
 
 logicalM=false(N,1);
 for ii=1:size(indM,1)
-    logicalM(round(indM(ii)))=true;
+    logicalM(indM(ii))=true;
 end
 logicalU=not(logicalM);
 
 % Système sparse
 Lu=L(logicalU,logicalU);
-Lb=L(logicalM,logicalU);
+Lb=L(logicalU,logicalM);
 
-xm=[zeros(size(indM1,1),1);ones(size(indM1,1),1)];
+xm=[zeros(size(indM1,1),1);ones(size(indM2,1),1)];
 
 
 MA = Lu;
-Mb = - Lb'*xm;
+Mb = - Lb*xm;
 
 disp('Sparse linear system created');
 
 % solve MA*x=Mb
 %xu=pcg(MA,Mb,1e-6,100);
-xu=cgs(MA,Mb,1e-6,100);
+xu=pcg(MA,Mb,1e-5,500);
 
 X_k=zeros(size(I));
 X_k(logicalU)=xu;

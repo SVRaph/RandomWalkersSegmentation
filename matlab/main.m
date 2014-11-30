@@ -9,7 +9,7 @@
 %   - 3D images
 %   - drivers are in a nx(sz) matrix
 %   - patient image is of size sz, 
-%   - myocardia have the same center and their size are normalized
+%   - myocardia have the same center and their sizes are normalized
 %   - same mean in each image
 
 %% Paramètres
@@ -18,7 +18,7 @@ seg_threshold=0.36; % Threshold to turn the result into binaries
 Nseeds = 12;
 
 alpha = 90;
-beta  = 130/100;
+beta  = 130;
 gamma = 0.4;
 
 
@@ -38,7 +38,7 @@ X_opt=zeros(sz);
 %% ROI -- NOT DONE
 
 %% Main loop on drivers
-for k=1:size(R,1)
+for k=1:1%size(R,1)
     R_k=squeeze(R(k,:,:,:));
     B_k=squeeze(B(k,:,:,:));
     X_k=Guided_Random_Walks(I,R_k,B_k,seeds,alpha,beta,gamma);
@@ -55,10 +55,9 @@ end
  
 if D_max>Dice_threshold
     fprintf(['Best segmentation with driver ',int2str(indx),'\nDice metrix=',num2str(D_max),'\n'])
-    %implay(Xopt);
 else
     fprintf('No matching subject found\nPerforming conventional Random Walks\n');
-    Xopt=Random_Walks(I,seeds,alpha);  
+    %X_opt=Random_Walks(I,seeds,alpha);  
 end
 
 % Test against the true segmentation

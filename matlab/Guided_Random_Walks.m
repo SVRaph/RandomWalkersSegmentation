@@ -99,7 +99,7 @@ Mb = (gamma/2)*Omegab'*bm + (gamma/2)*Omegau*bu - Lb'*xm - gamma*Ab'*xm;
 
 fprintf('Sparse linear system created\n');
 % solve MA*x=Mb
-xu=pcg(MA,Mb);
+xu=pcg(MA,Mb,1e-5,100);
 
 X_k=zeros(size(B));
 X_k(logicalU)=xu;

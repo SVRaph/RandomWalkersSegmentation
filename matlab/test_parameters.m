@@ -44,9 +44,10 @@ n=n+1;
     end
 end
 
-xlabel('gamma');
+
+semilogx(abscisse,maxDice/max(maxDice),'-o');
+xlabel('beta');
 ylabel('D/Dmax (%)');
-plot(abcisse,maxDice,'o');
- 
+set(gca,'XTick',abscisse);
 
 end
