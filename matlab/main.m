@@ -14,7 +14,7 @@
 
 %% Paramètres
 Dice_threshold=0.5; 
-seg_threshold=0.5; % Threshold to turn the result into binaries
+seg_threshold=0.36; % Threshold to turn the result into binaries
 Nseeds = 12;
 
 alpha = 90 /100;
@@ -47,7 +47,7 @@ for k=1:size(R,1)
     if D_k>D_max
         D_max=D_k;
         indx=k;
-        Xopt=X_k;
+        X_opt=X_k;
     end
     fprintf(['Dice index ',num2str(D_k),'\n']);
     
