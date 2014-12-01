@@ -1,4 +1,4 @@
-function [maxDice] = test_parameters(I,B0,R,B,seeds,alpha, beta, gamma, threshold)
+function [maxDice, maxIndex,abscisse] = test_parameters(I,B0,R,B,seeds,alpha, beta, gamma, threshold,drivers)
 
 sz=size(R);
 sz=sz(2:end);
@@ -9,10 +9,10 @@ sg = size(gamma,2);
 sv = max( max(sa,sb),sg) ;
 
 maxDice = zeros( sv,1 );
+maxIndex= zeros( sv,1 );
 n=1;
 
-abcisse = zeros( sv,1 );
-abcisse = (sa>1)*alpha + (sb>1)*beta + (sg>1)*gamma;
+abscisse = ((sa>1)*alpha + (sb>1)*beta + (sg>1)*gamma)';
 
 for a=1:sa
     for b=1:sb
@@ -24,11 +24,11 @@ indx=-1;
 X_opt=zeros(sz);
 
 %% Main loop on drivers
-for k=1:size(R,1)
+for k=drivers
     R_k=squeeze(R(k,:,:,:));
     B_k=squeeze(B(k,:,:,:));
     X_k=Guided_Random_Walks(I,R_k,B_k,seeds,alpha(a),beta(b),gamma(g));
-    D_k=Dice(X_k,B_k);
+    D_k=Dice(X_k>0.36,B_k);
     
     if D_k>D_max
         D_max=D_k;
@@ -39,15 +39,11 @@ for k=1:size(R,1)
 end
 
 maxDice(n) = Dice(X_opt>threshold, B0)
+maxIndex(n)= indx;
 n=n+1;
         end
     end
 end
 
-
-semilogx(abscisse,maxDice/max(maxDice),'-o');
-xlabel('beta');
-ylabel('D/Dmax (%)');
-set(gca,'XTick',abscisse);
 
 end
