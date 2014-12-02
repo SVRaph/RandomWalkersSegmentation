@@ -52,7 +52,6 @@ fprintf(' done \n');
 indM1=unique(reshape(seeds(1,:,:)-1,size(seeds,2),3)*v_sub2ind'+1);
 indM2=unique(reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1);
 indM=[indM1;indM2];
-
 [indM,sort_indices]=sort(indM);
 
 logicalM=false(N,1);

@@ -77,9 +77,7 @@ indM=[indM1;indM2];
 [indM,sort_indices]=sort(indM);
 
 logicalM=false(N,1);
-for i=1:size(indM,1)
-    logicalM(round(indM(i)))=true;
-end
+logicalM(indM)=true;
 logicalU=not(logicalM);
 
 % Système sparse

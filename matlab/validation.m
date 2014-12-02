@@ -1,9 +1,7 @@
 %% Validation d'une segmentation
 % Xopt against B0
 
-seg_threshold=0.43;
-
-find_seg_threshold(X_opt)
+seg_threshold=find_seg_threshold(X_opt)
 
 B1=(X_opt>seg_threshold);
 
