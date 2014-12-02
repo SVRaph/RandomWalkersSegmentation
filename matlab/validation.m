@@ -11,9 +11,12 @@ B1=(X_opt>seg_threshold);
 %implay(abs(B1-B0));
 
 show_boundaries(I,B0,B1);
-show_boundaries(I,B0,squeeze(B(indx,:,:,:)));
+Ib=show_boundaries(I,B1,squeeze(B(7,:,:,:)));
 
-% volume 
+mat2avi(Ib,'resultat.avi');
+
+
+% volume w
 v0=sum(B0(:));
 v1=sum(B1(:));
 fprintf(['Relative volume error: ',num2str((v1-v0)/v0),'\n']);

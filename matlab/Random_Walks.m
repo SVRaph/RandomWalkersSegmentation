@@ -49,22 +49,23 @@ fprintf('Compute W, L...');
 fprintf(' done \n');
 
 % Indices Marked et Unmarked
-indM1=reshape(seeds(1,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
-indM2=reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
-indM=round([indM1;indM2]);
+indM1=unique(reshape(seeds(1,:,:)-1,size(seeds,2),3)*v_sub2ind'+1);
+indM2=unique(reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1);
+indM=[indM1;indM2];
+
+[indM,sort_indices]=sort(indM);
 
 logicalM=false(N,1);
-for ii=1:size(indM,1)
-    logicalM(indM(ii))=true;
-end
+logicalM(indM)=true;
 logicalU=not(logicalM);
+
 
 % Système sparse
 Lu=L(logicalU,logicalU);
 Lb=L(logicalU,logicalM);
 
 xm=[zeros(size(indM1,1),1);ones(size(indM2,1),1)];
-
+xm=xm(sort_indices);
 
 MA = Lu;
 Mb = - Lb*xm;
@@ -78,6 +79,7 @@ xu=pcg(MA,Mb,1e-5,500);
 X_k=zeros(size(I));
 X_k(logicalU)=xu;
 X_k(logicalM)=xm;
+
 disp('Sparse linear system solved');
 
 end

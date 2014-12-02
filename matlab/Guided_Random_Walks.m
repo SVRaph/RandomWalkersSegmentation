@@ -71,9 +71,10 @@ fprintf('Compute W, Omega, L and A...');
 fprintf(' done\n');
 
 % Indices Marked et Unmarked
-indM1=reshape(seeds(1,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
-indM2=reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1;
+indM1=unique(reshape(seeds(1,:,:)-1,size(seeds,2),3)*v_sub2ind'+1);
+indM2=unique(reshape(seeds(2,:,:)-1,size(seeds,2),3)*v_sub2ind'+1);
 indM=[indM1;indM2];
+[indM,sort_indices]=sort(indM);
 
 logicalM=false(N,1);
 for i=1:size(indM,1)
@@ -91,8 +92,8 @@ Omegau=O(logicalU,logicalU);
 
 bm=B(logicalM);
 bu=B(logicalU);
-xm=[zeros(size(indM1,1),1);ones(size(indM1,1),1)];
-
+xm=[zeros(size(indM1,1),1);ones(size(indM2,1),1)];
+xm=xm(sort_indices);
 
 MA = Lu+gamma*Au;
 Mb = (gamma/2)*Omegab'*bm + (gamma/2)*Omegau*bu - Lb'*xm - gamma*Ab'*xm;

@@ -15,7 +15,6 @@
 %% Paramètres
 Dice_threshold=0.5; 
 seg_threshold=0.36; % Threshold to turn the result into binaries
-Nseeds = 12;
 
 alpha = 15;
 beta  = 25;
@@ -29,6 +28,8 @@ load('data.mat');
 sz=size(R);
 sz=sz(2:end);
 
+[~,~,seeds]=generate_heart( sz, center, axis, rays, width, 200,sizeblur);
+
 %% Test parametres
 [maxDice, maxIndex, abscisse] = test_parameters(I,B0,R,B,seeds,10, 30, 0.4, 0.36,1:size(R,1))
 
@@ -38,11 +39,25 @@ sz=sz(2:end);
 
 [maxDice, maxIndex, abscisse] = test_parameters(I,B0,R,B,seeds,15, 20, 10, 0.48,7)
 
-
 semilogx(abscisse,maxDice,'-o');
 xlabel('beta');
 ylabel('Dice');
 set(gca,'XTick',abscisse);
+
+
+vseeds=[2 4 8 16 60 212];
+maxDice=zeros(size(vseeds));
+n=1;
+for ns=vseeds
+    [d, ~, ~] = test_parameters(I,B0,R,B,seeds(:,1:ns,:),15, 20, 0.4, 0.4,7);
+    maxDice(n)=d;
+    n=n+1;
+end
+
+semilogx(vseeds,maxDice,'-o');
+xlabel('Nombre de seeds');
+ylabel('Dice');
+set(gca,'XTick',2*vseeds);
 
 
 %% Initialisation
@@ -72,8 +87,8 @@ if D_max>Dice_threshold
     fprintf(['Best segmentation with driver ',int2str(indx),'\nDice metrix=',num2str(D_max),'\n'])
 else
     fprintf('No matching subject found\nPerforming conventional Random Walks\n');
-    %X_opt=Random_Walks(I,seeds,alpha);  
+    X_rw=Random_Walks(I,seeds,alpha);  
 end
 
 % Test against the true segmentation
-% X_k=Guided_Random_Walks(I,I,B0,seeds,alpha,beta,gamma);
+% X_star=Guided_Random_Walks(I,I,B0,seeds,alpha,beta,gamma);

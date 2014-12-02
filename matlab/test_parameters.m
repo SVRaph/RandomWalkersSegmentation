@@ -14,9 +14,9 @@ n=1;
 
 abscisse = ((sa>1)*alpha + (sb>1)*beta + (sg>1)*gamma)';
 
-for a=1:sa
-    for b=1:sb
-        for g=1:sg
+for a=alpha
+    for b=beta
+        for g=gamma
 
 %% Initialisation
 D_max=-1;
@@ -27,7 +27,7 @@ X_opt=zeros(sz);
 for k=drivers
     R_k=squeeze(R(k,:,:,:));
     B_k=squeeze(B(k,:,:,:));
-    X_k=Guided_Random_Walks(I,R_k,B_k,seeds,alpha(a),beta(b),gamma(g));
+    X_k=Guided_Random_Walks(I,R_k,B_k,seeds,a,b,g);
     D_k=Dice(X_k>0.36,B_k);
     
     if D_k>D_max
