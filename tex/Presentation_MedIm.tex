@@ -1,0 +1,235 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+%\usepackage{subfig} % sous-figures
+%\usepackage{subfigure}
+\usepackage{xcolor} % couleurs
+\usepackage{amssymb} % symboles maths
+% \usepackage{media9} % fichiers audio
+\usetheme{Frankfurt}
+\addtobeamertemplate{footline}{\insertframenumber/\inserttotalframenumber}
+
+\graphicspath{{../fig/}}
+\usepackage{multimedia}
+
+\def\var{{\rm Var}}
+\def\cov{{\rm cov}} 
+\newcommand\RR{\mathbb{R}} 
+
+\title{Imagérie médicale - Projet \\ - \\ \small{Segmentation by retriveal with guided random walks: Application to left ventricle segmentation in MRI \\ A.Eslami A.Karamalis A.Katouzian N.Navab}} 
+\author{Marie \textsc{Rozand} et Raphaël \textsc{Sivera}}
+
+
+
+
+% \subfloat{\includegraphics[scale=0.25]{logo_enpc.jpg}} 
+\begin{document}
+\begin{frame}
+  \begin{center}
+
+    \titlepage
+
+  \end{center}
+\end{frame}
+
+
+\begin{frame}{Plan}
+  \tableofcontents
+\end{frame}
+
+
+
+\section{Introduction}
+\begin{frame}{Objectif}
+  \textbf{Objectif : }Segmenter le ventricule gauche sur des séquences IRM (a) en utilisant une base de donnée présegmentée (b) et (c).
+  \begin{figure}[h]
+    \begin{center}
+      \includegraphics[width=0.8\textwidth]{coeurs.png}
+    \end{center}
+  \end{figure}
+\end{frame}
+
+
+\begin{frame}{Dataset synthétique}
+On génère un dataset où les ventricules sont modélisés par des ellipsoïdes. 
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=0.6\textwidth]{seeds.png}
+  \end{center}
+\end{figure}
+\end{frame}
+
+
+\section{Méthode proposée}
+\begin{frame}{Marche aléatoire}
+  \begin{itemize}
+  \item L'image définit un graphe : un voxel $\leftrightarrow$ un sommet.
+  \item Le poids d'une arète en deux voxels adjacents est lié au gradient d'intensité.
+  \item La carte de probabilité qu'une marche aléatoire partant du voxel passe d'abord pas un voxel avec telle ou telle étiquette définie une segmentation
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Marche aléatoire guidée}
+Énergie associée à une marche aléatoire \only<2>{guidée} :
+\only<1>{$$ E(x)= \frac{1}{2} \sum_{i,j}{w_{ij} (x_i -x_j)^2} $$}
+\only<2>{$$ E(x)= \frac{1}{2} \sum_{i,j}{w_{ij} (x_i -x_j)^2} + \frac{\gamma}{2} \sum_{i,j}{\omega_{ij} (x_i -b_j)^2}$$}
+
+pour $w_{ij} = \exp(-\alpha(I_i-I_j)^2)$ et $\omega_{ij} = \exp(-\beta(I_i-R_j)^2)$
+
+Résolution d'un système linéaire sparse.
+\end{frame}
+
+
+\begin{frame}{Segmentation par sélection}
+\begin{itemize}
+\item Appliquer l'algorithme de \textit{guided random walk} pour chaque image de la database
+\item Sélectionner la segmentation en la comparant à la segmentation obtenue
+\item Si aucune image ne convient, effectuer une marche aléatoire non-guidée.
+\end{itemize}
+\end{frame}
+
+
+\section{Résultats}
+\begin{frame}{Résultats}
+  \begin{figure}[h]
+    \begin{center}
+      \parbox{5cm}{\includegraphics[width=0.45\textwidth]{../fig/segmentation_result_true.png}}
+      \parbox{5cm}{\includegraphics[width=0.45\textwidth]{../fig/segmentation_result_driver.png}}
+      \caption{Segmentation obtenue pour $\alpha=15$, $\beta=25$, $\gamma=4$ (en vert) et Segmentation de référence ou segmentation guide (en rouge), Dice : 0.93}
+    \end{center}
+  \end{figure}
+\end{frame}
+
+%\section{Résultats}
+%\begin{frame}{Image 3D}
+%  \begin{figure}[h]
+%    \begin{center}
+%\movie[width=\textwidth,showcontrols=true]
+%{\includegraphics[scale=1]{segmentation_result_driver.png}}{../fig/anim.avi} \\
+%    \end{center}
+%  \end{figure}
+%\end{frame}
+
+
+
+
+\begin{frame}{Paramètres de la marche aléatoire}
+
+3 paramètres contrôlent la marche aléatoire guidée :  
+$$ E(x)= \frac{1}{2} \sum_{i,j}{w_{ij} (x_i -x_j)^2} + \frac{\gamma}{2} \sum_{i,j}{\omega_{ij} (x_i -b_j)^2}$$
+pour $w_{ij} = \exp(-\alpha(I_i-I_j)^2)$ et $\omega_{ij} = \exp(-\beta(I_i-R_j)^2)$
+
+\begin{itemize}
+\item $\gamma$ : influence des images de la base d’image segmentée pour segmenter la nouvelle image. 
+
+\item $\alpha$ : sensibilité à la variation d’intensité dans l’image à segmenter.
+
+\item $\beta$ : sensibilité à la différence d’intensité entre l’image à segmentée et celles de la base de données. 
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Paramètres de la marche aléatoire - $\gamma$}
+%\framesubtitle{$\gamma$}
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Évolution de la similarité en fonction de $\gamma$ pour $\alpha=15$, $\beta=25$}
+    \includegraphics[width=0.8\textwidth]{../fig/gamma_alpha15_beta25.png}
+  \end{center}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Paramètres de la marche aléatoire - $\alpha \beta$}
+  \begin{figure}[h]
+    \begin{center}
+      \parbox{5cm}{\includegraphics[width=0.5\textwidth]{../fig/alpha_beta30_gamma0,4.png}}
+      \parbox{5cm}{\includegraphics[width=0.5\textwidth]{../fig/beta_alpha10_gamma0,4.png}}
+      \caption{Évolution de la similarité en fonction de $\alpha$ pour  $\beta=30$ et de $\beta$ pour $\alpha=10$, $\gamma=0.4$}
+    \end{center}
+  \end{figure}
+\end{frame}
+
+
+\begin{frame}{Paramètres de la marche aléatoire - Nombre de graines}
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Évolution de la similarité en fonction du nombre de graines, $\alpha=10$, $\beta=20$, $\gamma=4$}
+    \includegraphics[width=0.8\textwidth]{../fig/nseeds_alpha15_beta20_gamma4.png}
+    \label{fig:nseeds}
+  \end{center}
+\end{figure}
+\end{frame}
+
+
+
+\section{Critiques}
+\subsection*{Seuil de segmentation}
+\begin{frame}{Seuil de segmentation}
+\begin{figure}[h]
+  \begin{center}
+    \caption{Évolution de la similarité en fonction du seuil de segmentation $\alpha=15$, $\beta=25$, $\gamma=4$}
+    \includegraphics[width=0.8\textwidth]{../fig/seg_threshold_alpha15_beta25_gamma4.png}
+    \label{fig:seg_threshold}
+  \end{center}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Seuil de segmentation}
+\begin{itemize}
+\item Pas étudier dans l'article, seuil=0.5
+\item A priori et asymétrie de l'image
+\item Compromis sensibilité-spécificité
+\end{itemize}
+\begin{figure}[h!]
+  \begin{center}
+    \caption{courbe ROC}
+    \includegraphics[width=0.6\textwidth]{../fig/ROC.png}
+  \end{center}
+\end{figure}
+\end{frame}
+
+\subsection{Critères d'évaluation}
+\begin{frame}{Critères d'évaluation}
+\begin{itemize}
+\item Dice $2 \| B_0 \cap B_1 \| / ( \| B_0 \| + \| B_1 \| )$ 
+\item \textit{Shape similarity} $ S(X,B)= \frac{1}{\|\partial B \|} \sum_{n \in \partial B}{ \left( \frac{\|\nabla L_x(n) \cdot \nabla L_B(n) \|}{\|\nabla L_x(n)\| \| \nabla L_B(n) \|} \right)} $ où $L_A$ correspond à la distance signée à la frontière de $A$.
+\item Déplacement de la frontière
+\item Erreur sur le volume des sous-parties du cœur...
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Critères d'évaluation}
+\begin{figure}[h]
+  \begin{center}
+    \caption{\textit{Shape similarity} et Mesure de Dice}
+      \includegraphics[width=0.8\textwidth]{../fig/Shape_similarity_Dice.png}
+      \label{fig:similarities}
+  \end{center}
+\end{figure}
+\end{frame}
+
+
+\section{Conclusion}
+\begin{frame}{Conclusion - Perspectives}
+\begin{itemize}
+\item Exploite efficacement les relations inter-images.
+\item Les paramètres $\gamma$ et $\beta$ permettent de tenir compte de la variabilité du dataset.
+\item Sélection automatique du meilleur modèle.
+\item Meilleur qu'une marche aléatoire.
+\end{itemize}
+
+ \vspace{0.5cm}
+  $\Rightarrow$ Problème du recalage géométrique et dynamique\\
+  $\Rightarrow$ Comparaison au niveau du voxel. \\
+  $\Rightarrow$ Une exécution pour chaque image de référence.
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\section{}
+
+\begin{frame}[noframenumbering]
+  \frametitle{C'est fini}
+\end{frame}
+
+
+\end{document}

@@ -12,8 +12,8 @@
 \newcommand{\R}{\mathbb{R}}
 
 \title{Imagérie médicale - Projet \\ - \\ \small{Segmentation by retriveal with guided random walks: Application to left ventricle segmentation in MRI \\ A.Eslami A.Karamalis A.Katouzian N.Navab}} 
-\author{Marie \textsc{Rozand}, Alexandre \textsc{Sarrazin} et Raphaël \textsc{Sivera}}
- 
+\author{Marie \textsc{Rozand} et Raphaël \textsc{Sivera}}
+
 % \pagestyle{headings} % affiche un rappel discret (en haut à gauche)
 % de la partie dans laquel on se situe
 
@@ -25,106 +25,217 @@
 
 Dans cet article une nouvelle méthode de segmentation est présentée puis appliquée à la délimitation du ventricule gauche dans des séquences IRM.
 
-La construction d'un a priori de forme statistique est parfois difficile et son utilisation peu adapté à la présence de cas extrême. Il s'agit donc ici d'utiliser directement la connaissance contenue dans une base de données d'images segmentées. Afin de garder un maximum de variabilité, ils utilisent cette base de données pour guider un algorithme de marche aléatoire.
+La construction d'un a priori de forme statistique est parfois difficile et son utilisation peu adaptée à la présence de cas extrême. Il s'agit donc ici d'utiliser directement la connaissance contenue dans une base de données d'images segmentées. Afin de garder un maximum de variabilité, ils utilisent cette base de données pour guider un algorithme de marche aléatoire.
 
 
-\section{Prior work}
+\section{Méthodes précédentes}
 
-\section{Technical content}
+Comme la forme d’un cœur est relativement stable, il est important d’utiliser cette connaissance au préalable pour améliorer la précision d’une segmentation. La segmentation des parois du cœur s’est d‘abord basée sur la déformation de modèles de 1988 avec la méthode des contours actifs. La courbe évolue de manière à minimiser une fonction énergie basée sur le contenu de l’image (gradient, mesure sur un voisinage etc) et sur une mesure de régularité de la courbe, souvent la courbure. Le modèle est préalablement appris sur une base de données ainsi que la variabilité du modèle dans sa forme (ASM) ou bien dans les intensités (AAM).
 
-\subsection{Guided random walk}
+Une autre méthode de segmentation, apparue en 2006, s’est basée sur une modélisation du problème sous forme de graphe, et une résolution par l’algorithme de marche aléatoire. L. Grady a défini différentes manières d’intégrer les informations à priori sur la forme, les frontières et autres dans le graphe lui-même.
 
-Si notre image contient des pixels déjà étiquettés (\textit{seeds}), la probabilité qu'une marche aléatoire partant d'un pixel atteigne un pixel avec tel ou tel label en premier définit une segmentation de l'image. Les probabilités de transition $w_{ij}$ entre deux pixels adjacents sont définies les caractéristiques de l'image (gradient de l'intensité, etc.).
+La méthode de l’article permet d’intégrer directement l’information de la base de données dans le graphe sans apprentissage de forme au préalable. Elle peut donc directement s’appliquer à d’autres formes en prenant toujours une base de données adaptée. Enfin elle permet d’évaluer l’efficacité de la segmentation et ne pas utiliser la base de données si elle est jugée peu pertinente.
 
-On peut montrer le calcul des probabilités peut se ramener à un problème d'optimisation quadratique de l'énergie : 
+
+\section{Contenu technique}
+
+\subsection{Marche aléatoire guidée}
+
+Si notre image contient des voxels déjà étiquettés (\textit{seeds}), la probabilité qu'une marche aléatoire partant d'un voxel atteigne un voxel avec tel ou tel label en premier définit une segmentation de l'image. Les probabilités de transition $w_{ij}$ entre deux voxels adjacents sont définies à partir des caractéristiques de l'image (gradient de l'intensité, etc.).
+
+On peut montrer que le calcul des probabilités peut se ramener à un problème d'optimisation quadratique de l'énergie : 
 $$ E(x)= \frac{1}{2} \sum_{i,j}{w_{ij} (x_i -x_j)^2} $$
 
-S'il n'est pas facile de modifier directement les probabilités pour tenir compte d'une connaissance a priori, il est aisé de modifier la formulation variationnelle. On cherche donc à miniser :
+S'il n'est pas facile de modifier directement les probabilités pour tenir compte d'une connaissance a priori, il est aisé de modifier la formulation variationnelle. On cherche donc à minimiser :
 $$ E(x)= \frac{1}{2} \sum_{i,j}{w_{ij} (x_i -x_j)^2} + \frac{\gamma}{2} \sum_{i,j}{\omega_{ij} (x_i -b_j)^2}$$
 
-où l'on définit $I_i$ l'intensité de l'image au pixel $i$, $R_i$ l'intensité de l'image guide en $i$, $b_i$ le label du pixel $i$ de l'image $R$ ainsi que :
+où l'on définit $I_i$ l'intensité de l'image au voxel $i$, $R_i$ l'intensité de l'image guide en $i$, $b_i$ le label du voxel $i$ de l'image $R$ ainsi que :
 \begin{align*}
-w_{ij} &= \exp(-\beta(I_i-I_j)^2) \text{ si $j$ est dans le voisinage intra-image de $i$} \\
-      &= 0 \text{ sinon}\\
-\omega_{ij} &= \exp(-\alpha(I_i-R_j)^2) \text{ si $j$ est dans le voisinage inter-images de $i$}\\
-           &= 0 \text{ sinon}\\
+  w_{ij} &= \exp(-\alpha(I_i-I_j)^2) \text{ si $j$ est dans le voisinage intra-image de $i$} \\
+  &= 0 \text{ sinon}\\
+  \omega_{ij} &= \exp(-\beta(I_i-R_j)^2) \text{ si $j$ est dans le voisinage inter-images de $i$}\\
+  &= 0 \text{ sinon}\\
 \end{align*}
 
 La solution à ce problème de minimisation est explicite et revient à résoudre un système linéaire parcimonieux.
 
-\subsection{Segmentation by retrival}
+\subsection{Sélection de la segmentation optimale}
 
-L'algorithme consiste à appliquer l'algorithme de \textit{guided random walk} pour chaque image présente dans la database. Pour sélectionner la segmentation à garder on compare la segmentation obtenue en seuillant le champs de probabilité $x$ à la segmentation de l'image guide. Si la distance de Dice est minimale cela signifie que les deux images se ressemblent, on garde alors la segmentation obtenue avec cette référence.
+L'algorithme consiste à appliquer l'algorithme de \textit{guided random walk} avec chaque image présente dans la database. Pour sélectionner la segmentation à garder on compare la segmentation, obtenue en seuillant le champs de probabilité $x$, à la segmentation de l'image guide. Si la distance de Dice est minimale cela signifie que les deux images se ressemblent, on garde alors la segmentation obtenue avec cette référence.
 
 
 \section{Résultats}
 
-Cette méthode dépend de 5 paramètres : $\alpha$, $\beta$, $\gamma$, du seuil utilisé pour segmenté et du nombre de seeds. Pour optimiser la méthode nous avons étudié l’efficacité de la segmentation en faisant varier ces paramètres.
+Cette méthode dépend de 5 paramètres : $\alpha$, $\beta$, $\gamma$, du seuil utilisé pour segmenter et du nombre de seeds. Pour optimiser la méthode nous avons étudié l’efficacité de la segmentation en faisant varier ces paramètres. Le paramètre de seuil n'est pas étudié dans l'article alors que la valeur proposée ne semble pas convenir dans notre implémentation. On a donc décidé de revenir un peu plus en détail sur les problèmes qu'ils soulèvent dans la partie suivante. 
+
+On présente dans un premier temps une segmentation qu'il est possible d'obtenir pour de bons paramètres. On reviendra ensuite sur leur influence.
+
+\subsection{Premier résultat}
+
+On ne dispose pas de réelles images IRM. On a donc utilisé un dataset synthétique. Chaque ventricule est modélisé par un ellipsoide creux. La position, les axes et les rayons peuvent varier aléatoirement dans un petit intervalle (d'environ plus ou moins 5\% autour d'une valeur fixe). Pour plus de réalisme, nous avons ajouté du flou, un biais (fixe), et du bruit (gaussien d'écart-type 0.1, pour une dynamique comprise entre -1 et 1). On teste alors l'algorithme tel qu'il est décrit par les auteurs, cf figures~\ref{fig:seg1}~et~\ref{fig:seg2}.
+
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Segmentation obtenue pour $\alpha=15$, $\beta=25$, $\gamma=4$ (en vert) et Segmentation de référence (en rouge)}
+    \includegraphics[width=0.45\textwidth]{../fig/segmentation_result_true.png}
+    \label{fig:seg1}
+  \end{center}
+\end{figure}
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Segmentation obtenue pour $\alpha=15$, $\beta=25$, $\gamma=4$ (en vert) et Segmentation guide utilisée (en rouge)}
+    \includegraphics[width=0.45\textwidth]{../fig/segmentation_result_driver.png}
+    \label{fig:seg2}
+  \end{center}
+\end{figure}
+
+La segmentation fonctionne plutôt bien ici malgré un décalage et une différence de taille entre le patient et le guide optimal (cf figure~\ref{fig:seg2}). On obtient un Dice de 0.93 et une \textit{shape similarity} (voir section Critères d'évaluation) de 0.94. On voit que le modèle permet de différencier les deux ventricules malgré leur intensité similaire. Réciproquement on découpe précisément le muscle de l'arrière plan là où le contraste est élevé grâce à la marche aléatoire.  
+
+\clearpage
 
 \subsection{Paramètre de la marche aléatoire}
 
-Tout d’abord, il y a trois paramètres qui contrôlent l’algorithme de marche aléatoire guidée : $\alpha$, $\beta$ et $\gamma$. 
+Tout d’abord, il y a trois paramètres qui contrôlent l’algorithme de marche aléatoire guidée :  
 
-Le paramètre $\gamma$ jauge de l’influence des images de la base d’image segmentée pour segmenter la nouvelle image. Si $\gamma=0$, l’algorithme se résume à une simple marche aléatoire. Plus il est grand, plus l’influence des connaissances a priori sont prises en compte. 
+\begin{itemize}
+\item $\gamma$ jauge l’influence des images de la base d’image segmentée pour segmenter la nouvelle image. Si $\gamma=0$, l’algorithme se résume à une simple marche aléatoire. Plus il est grand, plus l’influence des connaissances a priori sont prises en compte. 
 
-Le paramètre $\alpha$ définit la sensibilité à la variation d’intensité au sein de chaque classe dans l’image à segmenter. 
+\item $\alpha$ définit la sensibilité à la variation d’intensité au sein de chaque classe dans l’image à segmenter.
 
-Le paramètre $\beta$ définit la sensibilité de la méthode à la différence d’intensité entre l’image à segmentée et celles de la base de données. 
+\item $\beta$ définit la sensibilité de la méthode à la différence d’intensité entre l’image à segmenter et celle de la base de données. 
+\end{itemize}
 
 Les valeurs de ces paramètres qui optimisent la méthode ont été évaluées de manière empirique. On évalue la performance pour un patient et une base de donnée fixe et on représente la mesure de Dice pour chaque valeur de paramètre.
 
-
-Le graphe (a) représente la précision de la segmentation pour différentes valeurs de γ et à α=10 et β=30 fixés. On voit que le γ est optimal aux alentours de 10. Cet optimum a été évalué sur la segmentation d’une seule image alors que d’en l’article ils faisaient la moyenne sur 6 images. Cependant l’efficacité aux environs de γ=10 est assez stable (99\% du maximum entre 1 et 30). Par contre, dans l’article, ils conseillent de prendre la valeur 0.4 qui est reste assez efficace dans notre cas (Dice=0.88) mais qui est quand même relativement éloignée de notre optimum. Cette différence s’explique par la dépendance du paramètre γ  avec la base de données utilisée. Si elle contient une image très proche de l’image à segmenter alors, il est évidemment préférable de prendre fortement en compte l’information de l’image de la base et donc d’utiliser un γ élevé. Comme nos images sont synthétiques, leur variabilité est plus faible que dans les données réelles utilisées dans l’article, d’où la différence d’optimum. Ce paramètre est donc assez difficile à estimer a priori et dépend fortement de la richesse de la base de données par rapport à la variabilité des images.
-
- Le graphe (b) représente la mesure de Dice obtenue pour différentes valeur de α, à β=30 et γ=0.4 fixés. La valeur optimale que l’on obtient est pour α=15 mais on remarque qu’il suffit de prendre une valeur suffisamment grande pour que l’algorithme fonctionne. En effet, si on prend α trop petit, l’algorithme compare les labels des pixels voisins même si ceux-ci ont des intensités très différentes. L’article montre une courbe très proche mais avec un α quatre fois plus grand. La valeur de α dépend de l’intervalle dans lequel sont prises les intensités. Dans nos données synthétiques nous avons des intensités comprises entre [-1,1]. Nous en avons donc déduis que leurs intensités devaient être dans un intervalle deux fois plus petit [0,1] ce qui est standard dans le traitement d’image. Cela justifierait la nécessité d’un paramètre 4 fois plus grand dans le poids gaussien.
-
-
-Le graphe (c) illustre la précision de la méthode suivant le paramètre β et à α=10 et γ=0.4 fixés. De même que pour α, on observe que l’optimum et à 20 mais que l’efficacité décroit très faiblement après cette valeur de paramètre. Il faut donc simplement prendre une valeur suffisamment grande pour pénaliser des arêtes entre deux voxels d’intensité très différentes et ne pas considérer le label du voxel de l’image de la base s’il n’est pas d’intensité similaire au voxel de l’image à segmenter. De plus on obtient aussi des valeurs différentes à celles de l’article, toujours à causes de la différence entre les intervalles d’intensités.
+\subsubsection{Influence de $\gamma$}
 
 
 
-%À $\alpha=90$ et $\beta=1.3$ fixés, on voit que le $\gamma$ est optimal aux alentours de 0.3. La précision de la segmentation varie entre 0.2 et 0.4 avec une chute importante pour les valeurs inférieures, nous avons donc choisi de fixer $\gamma=0.4$ pour la suite de notre évaluation.
-
-\subsection{Seuil de segmentation}
-
-L'algorithme de marche aléatoire renvoie une carte de probabilités. Il faut seuiller ces valeurs pour obtenir une segmentation. Les auteurs proposent simplement de seuiller à $0,5$ : un voxel appartient à l'objet si un marcheur aléatoire partant de ce point à plus de chance d'atteindre en premier une graine de l'objet et inversement. Cependant ce seuil ne tient pas compte des a priori que l'on pourrait avoir sur l'objet. Un voxel a par exemple a priori plus de chance d'appartenir à l'arrière plan qui occupe une majorité du volume. Cela ne tient pas compte de la répartition des seeds. D'ailleurs expérimentalement ce seuil ne nous convient pas. On obtient de meilleurs résultats (mesure de Dice) pour un seuil au alentour de $0,4$~\ref{fig:seg_threshold}. Comme on le voit sur la figure ~\ref{fig:seg_threshold}, le résultat est alors peu sensible à ce seuil et il est possible de l'adapter en fonction de l'évolution du volume de l'objet segmenté. En effet lorsque l'on se rapproche de la valeur optimale le volume se met à diminuer de manière importante.
-\begin{center}
-\begin{figure}[h]
-\label{fig:seg_threshold}
- \caption{Évolution de la similarité en fonction du seuil de segmentation $\alpha=15$, $\beta=25$, $\gamma=4$}
-\includegraphics[width=0.8\textwidth]{../fig/seg_threshold_alpha15_beta25_gamma4.png}
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Évolution de la similarité en fonction de $\gamma$ pour $\alpha=15$, $\beta=25$}
+    \includegraphics[width=0.8\textwidth]{../fig/gamma_alpha15_beta25.png}
+    \label{fig:gamma}
+  \end{center}
 \end{figure}
-\end{center}
+
+
+
+La figure~\ref{fig:gamma} représente la précision de la segmentation pour différentes valeurs de $\gamma$ pour $\alpha=15$ et $\beta=25$ fixés. On voit que le $\gamma$ est optimal en $0.1$. Cet optimum a été évalué sur la segmentation d’une seule image alors que d’en l’article ils faisaient la moyenne sur 6 images. Cependant la sensibilité relativement à ce paramètre est assez stable (95\% du maximum entre 0.1 et 10). 
+
+Dans l’article, ils conseillent de prendre la valeur $0.4$, ce qui est assez efficace dans notre cas. La différence des courbes s’explique par la dépendance du paramètre $\gamma$  avec la base de données utilisée. Si elle contient une image très proche de l’image à segmenter alors, il est évidemment préférable de prendre fortement en compte l’information de l’image de la base et donc d’utiliser un $\gamma$ élevé. Comme nos images sont synthétiques, leur variabilité est plus faible que celle des données réelles utilisées dans l’article.  En revanche notre base de données est plus petite et donc moins riche que celle de l’article. Finalement, on a une différence entre l’image à segmentée et la meilleure image de la base de donnée qui est légèrement plus grande que leur moyenne, d’où le gamma optimal un peu plus faible. Ce paramètre est donc assez difficile à estimer a priori et dépend fortement de la richesse de la base de données par rapport à la variabilité des images.
+
+
+\subsubsection{Influence de $\alpha$}
+
+
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Évolution de la similarité en fonction de $\alpha$ pour  $\beta=30$, $\gamma=0.4$}
+    \includegraphics[width=0.8\textwidth]{../fig/alpha_beta30_gamma0,4.png}
+    \label{fig:alpha}
+  \end{center}
+\end{figure}
+
+
+La figure~\ref{fig:alpha} représente la mesure de Dice obtenue pour différentes valeurs de $\alpha$, à $\beta=30$ et $\gamma=0.4$ fixés. La valeur optimale est obtenue pour $\alpha=15$ mais on remarque qu’il suffit de prendre une valeur suffisamment grande pour que l’algorithme fonctionne correctement. En effet, si on prend $\alpha$ trop petit, les différences d'intensités entre voxels voisins sont toujours négligeables. L’article montre une courbe très proche mais avec un $\alpha$ quatre fois plus grand. La valeur de $\alpha$ dépend de l’intervalle dans lequel sont prises les intensités. Dans nos données synthétiques nous avons des intensités comprises entre [-1,1]. Nous en avons donc déduit que leurs intensités devaient être dans un intervalle deux fois plus petit [0,1] ce qui est standard dans le traitement d’image. Cela justifierait la nécessité d’un paramètre 4 fois plus grand dans le poids gaussien.
+
+
+
+\subsubsection{Influence de $\beta$}
+
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Évolution de la similarité en fonction de $\beta$ pour $\alpha=10$, $\gamma=0.4$}
+    \includegraphics[width=0.8\textwidth]{../fig/beta_alpha10_gamma0,4.png}
+    \label{fig:beta}
+  \end{center}
+\end{figure}
+
+La figure~\ref{fig:beta} illustre la précision de la méthode en fonction du paramètre $\beta$ pour $\alpha=10$ et $\gamma=0.4$ fixés. De même que pour $\alpha$, on observe un optimum (en $\beta=20$) mais l’efficacité décroit très faiblement pour de plus grandes valeurs de paramètre. Il faut donc simplement prendre une valeur suffisamment grande pour pénaliser des arêtes entre deux voxels d’intensité très différentes et ne pas considérer le label du voxel de l’image de la base s’il n’est pas d’intensité similaire au voxel de l’image à segmenter. Cette condition est particulièrement importante lorsqu'il y a un décalage entre les deux images. 
+Par ailleurs on obtient également des valeurs différentes à celles de l’article, sûrement toujours à causes de la différence de dynamiques des images.
 
 
 \subsection{Nombre de graines}
 
-Ensuite, nous avons étudié l’influence du nombre de graines sur la précision de la segmentation. Elles permettent de guider la marche aléatoire mais aussi de cibler la cardioïde à segmenter. L’algorithme compare les images pixels par pixels et est donc très sensible aux décalages des images. Il faut donc centrer toute les images sur les cardioïdes pour maximiser la similarité de l’image avec la base de données. Dans notre cas 
+Ensuite, nous avons étudié l’influence du nombre de graines sur la précision de la segmentation. Dans la méthode de l’article, elles permettent de guider la marche aléatoire mais aussi de cibler la cardioïde à segmenter. L’algorithme compare les images voxels par voxels et est donc très sensible aux décalages des images. Il faut donc centrer toutes les images sur les cardioïdes pour maximiser la similarité de l’image avec la base de données. 
 
 
-
-maxDice pour alpha =
-    0.5447	0.1
-    0.5486	0.3
-    0.5596	1
-    0.5799	3
-    0.5892	10
-    0.5649	50
-    0.5582	80
-    0.5553	100
-    0.5495	150
-    0.5462	200
-    0.5422	300
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Évolution de la similarité en du nombre de graines, $\alpha=10$, $\beta=20$, $\gamma=4$}
+    \includegraphics[width=0.8\textwidth]{../fig/nseeds_alpha15_beta20_gamma4.png}
+    \label{fig:nseeds}
+  \end{center}
+\end{figure}
 
 
+Dans notre cas, comme nos données étaient synthétisées, nous les avons directement à peu près centrées, donc les graines ne nous servent qu’à guider la marche aléatoire. On voit qu’il faut au moins 4 graines pour que l’algorithme fonctionne bien (au moins une à l’intérieur et à l’extérieur de la cardioïde plus une dans la paroi). L’optimum est atteint à partir de 16 graines. Dans l’article, il faut au moins 12 graines pour rendre l’algorithme efficace sur une image 2D. En effet pour centrer la cardioïde correctement, on a besoin de beaucoup de graines. En 3D il en faut donc probablement un très grand nombre, ce qui peut être un problème dans l’utilisation clinique du médecin.
 
+
+\clearpage
 
 \section{Critiques}
 
+
+\subsection{Seuil de segmentation}
+
+L'algorithme de marche aléatoire renvoie une carte de probabilités. Il faut seuiller ces valeurs pour obtenir une segmentation. Les auteurs proposent simplement de seuiller à $0.5$ : un voxel appartient à l'objet si un marcheur aléatoire partant de ce point à plus de chance d'atteindre en premier une graine de l'objet et inversement. Cependant ce seuil ne tient pas compte des a priori que l'on pourrait avoir sur l'objet. Un voxel a par exemple a priori plus de chance d'appartenir à l'arrière plan qui occupe une majorité du volume. Cela ne tient pas compte de la répartition des seeds. D'ailleurs, expérimentalement, ce seuil ne nous convient pas. 
+
+On obtient de meilleurs résultats (mesure de Dice) pour un seuil au alentour de $0.4$~\ref{fig:seg_threshold}. Comme on le voit sur la figure ~\ref{fig:seg_threshold}, le résultat est alors peu sensible à ce seuil et il est possible de l'adapter en fonction de l'évolution du volume de l'objet segmenté. En effet lorsque l'on se rapproche de la valeur optimale le volume se met à diminuer de manière importante.
+
+\begin{figure}[h!]
+  \begin{center}
+    \caption{Évolution de la similarité en fonction du seuil de segmentation $\alpha=15$, $\beta=25$, $\gamma=4$}
+    \includegraphics[width=0.8\textwidth]{../fig/seg_threshold_alpha15_beta25_gamma4.png}
+    \label{fig:seg_threshold}
+  \end{center}
+\end{figure}
+
+
+On peut bien sûr adapter ce seuil si l'on souhaite un autre compromis sensibilité-spécificité, cf fig~\ref{fig:ROC}.
+
+\begin{figure}[h!]
+  \begin{center}
+    \caption{courbe ROC \textit{Receiver Operating Characteristic}}
+    \includegraphics[width=0.8\textwidth]{../fig/ROC.png}
+    \label{fig:ROC}
+  \end{center}
+\end{figure}
+
+\subsection{Critères d'évaluation}
+
+Pour renforcer notre évaluation on a souhaité effectuer quelques tests pour d'autres images de patients. On a également voulu vérifier que l'indice de Dice largement utilisé pour évaluer l'algorithme rendait bien compte de l'efficacité de l'algorithme. L'article propose également de mesurer localement l'erreur de localisation de la surface ainsi qu'un calcul de similarité de forme (\textit{Shape similarity}). 
+
+
+On a donc implémenté un calcul de similarité de forme entre la segmentation résultat $R$ et la segmentation de référence $B$ définit par :
+$$ S(X,B)= \frac{1}{\|\partial B \|} \sum_{n \in \partial B}{ \left( \frac{\|\nabla L_x(n) \cdot \nabla L_B(n) \|}{\|\nabla L_x(n)\| \| \nabla L_B(n) \|} \right)} $$
+où $L_A$ correspond à la distance signée à la frontière de $A$.
+
+On a ensuite comparé la mesure de $Dice$ et cette mesure pour différents cas test. Voir~\ref{fig:similarities}.
+
+
+\begin{figure}[h!]
+  \begin{center}
+    \caption{\textit{Shape similarity} et Mesure de Dice}
+      \includegraphics[width=0.8\textwidth]{../fig/Shape_similarity_Dice.png}
+      \label{fig:similarities}
+  \end{center}
+\end{figure}
+
+
+Tout d'abord les deux grandeurs sont, dans notre cas, apparament bien covariantes (linéairement qui plus est). L'étalement des erreurs commises dépend de la variabilité permise dans l'espace des patients. Ici toutes les images sont segmentées avec succès. Il faudrait maintenant tester sur un dataset réel pour pouvoir juger de l'efficacité réelle de l'algorithme. En particulier, nous n'avons pas eu besoin de calibrer et de recaler les images. Même si les cœurs synthétiques sont placés avec une précision de + ou - 5 voxels et que l'intensité peut légèrement varier, il pourrait être intéressant de voir comment cet algorithme se comporte lorsque les images sont mal calibrées.
+
 \section{Travaux ultérieurs}
+
+L’article datant de décembre 2012, très peu (7 selon google) d’articles le citent. Seulement l’un d’eux semble reprendre la méthode des marches aléatoires  tout en utilisant une connaissance a priori sur l’image à segmenter. Mais ils utilisent un modèle dynamique pour guider la marche aléatoire plutôt qu’une base de données brute.
+
 
 \section{Conclusion}
 
+Cet algorithme basé sur des marches aléatoires exploite efficacement les relations inter-images que l'on peut avoir entre des différentes IRM de cœurs. Au dela de l'a priori de forme la sélection automatique du meilleur modèle permet de guider précisément la segmentation. Les paramètres (en particulier $\gamma$ et $\beta$) permettent de tenir compte de la variabilité du dataset. Cette méthode permet d'obtenir de meilleurs résultats pour toutes les images similaires à une image de la base de donnée quelque soit sa fréquence. Et dans le pire des cas l'algorithme performe au moins aussi bien qu'une marche aléatoire conventionnelle. 
+
+On a cependant remarqué que la recherche d'une image ``proche'' dans le dataset est assez sensible aux transformations géométriques. OR l'on pouvait obtenir un nombre arbitraire de segmentations de référence pour palier à cette variabilité. De plus cela ne résoudrait pas le problème de manière satisfaisante. L'algorithme doit être exécuter pour chaque image test. Cela demande donc une importante puissance de calcul. Sur un ordinateur de bureau une exécution prend environ 20s pour une image 100x100x100. On peut donc essayer d'utiliser les images pré-segmentées de manière plus générale pour compenser certaines transformations ou pour y être moins sensible.
 
 
 \end{document}
