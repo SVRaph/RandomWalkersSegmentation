@@ -13,13 +13,13 @@
 %   - same mean in each image
 
 %% Paramètres
-Dice_threshold=0.5; 
-seg_threshold=0.36; % Threshold to turn the result into binaries
+Dice_threshold=0.25; 
+seg_threshold=0.43; % Threshold to turn the result into binaries
 
 alpha = 15;
 beta  = 25;
 gamma = 4;
-kopt=7;
+
 
 %% Lecture des données :
 % drivers : R, B,
@@ -29,31 +29,9 @@ seeds=round(seeds);
 sz=size(R);
 sz=sz(2:end);
 
-%% Test parametres
-% [maxDice, maxIndex, abscisse] = test_parameters(I,B0,R,B,seeds,alpha,[1 3 10 30], gamma, seg_threshold,1:size(R,1))
 
-[maxDice, maxIndex, abscisse] = test_parameters(I,B0,R,B,seeds,alpha, beta, gamma, 0.48,7)
-semilogx(abscisse,maxDice,'-o');
-xlabel('beta');
-ylabel('Dice');
-set(gca,'XTick',abscisse);
-
-
-%% Test nombre de seeds
-vseeds=[1 2 4 8 16 32 64 128 212];
-maxDice=zeros(size(vseeds));
-n=1;
-for ns=vseeds
-    [d, ~, ~] = test_parameters(I,B0,R,B,seeds(:,1:ns,:),15, 20, 4, 0.4,7);
-    maxDice(n)=d;
-    n=n+1;
-end
-semilogx(vseeds,maxDice,'-o');
-xlabel('Nombre de seeds');
-ylabel('Dice');
-set(gca,'XTick',vseeds);
-axis('tight');
-
+% Visualisation
+% plot_seeds(I,seeds);
 
 %% Initialisation
 D_max=-1;
@@ -63,7 +41,7 @@ X_opt=zeros(sz);
 % ROI -- NOT DONE
 
 %% Main loop on drivers
-for k=7%1:size(R,1)
+for k=1:size(R,1)
     R_k=squeeze(R(k,:,:,:));
     B_k=squeeze(B(k,:,:,:));
     X_k=Guided_Random_Walks(I,R_k,B_k,seeds,alpha,beta,gamma);
@@ -74,16 +52,36 @@ for k=7%1:size(R,1)
         indx=k;
         X_opt=X_k;
     end
-    fprintf(['Dice index ',num2str(D_k),'\n']);
-    
+    fprintf(['Dice index with driver ',int2str(k),': ',num2str(D_k),'\n\n']);   
 end
  
+
 if D_max>Dice_threshold
-    fprintf(['Best segmentation with driver ',int2str(indx),'\nDice metrix=',num2str(D_max),'\n'])
+    fprintf(['\nBest segmentation with driver ',int2str(indx),'\nDice metric=',num2str(D_max),'\n'])
 else
     fprintf('No matching subject found\nPerforming conventional Random Walks\n');
     X_rw=Random_Walks(I,seeds,alpha);  
+    X_opt=X_rw;
 end
 
-% Test against the true segmentation
-% X_star=Guided_Random_Walks(I,I,B0,seeds,alpha,beta,gamma);
+
+%% Validation
+B1=1*(X_opt>seg_threshold);
+
+%show_boundaries(I,B0,B1);
+%show_boundaries(I,squeeze(B(indx,:,:,:)),B1);
+
+% volume w
+v0=sum(B0(:));
+v1=sum(B1(:));
+fprintf(['Relative volume error: ',num2str((v1-v0)/v0),'\n']);
+
+% Dice
+d01=Dice(B0,B1);
+fprintf(['Dice index ',num2str(d01),'\n']);
+
+% shape similarity
+addpath(genpath('toolbox_fm'));
+S = similarity_shape(B0,B1);
+
+

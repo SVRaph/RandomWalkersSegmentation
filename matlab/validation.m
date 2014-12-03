@@ -2,7 +2,6 @@
 % Xopt against B0
 
 seg_threshold=find_seg_threshold(X_opt)
-
 B1=(X_opt>seg_threshold);
 
 % Display
@@ -13,7 +12,6 @@ Ib=show_boundaries(I,B1,squeeze(B(7,:,:,:)));
 
 mat2avi(Ib,'resultat.avi');
 
-
 % volume w
 v0=sum(B0(:));
 v1=sum(B1(:));
@@ -23,6 +21,9 @@ fprintf(['Relative volume error: ',num2str((v1-v0)/v0),'\n']);
 d01=Dice(B0,B1);
 fprintf(['Dice index ',num2str(d01),'\n']);
 
+% shape similarity
+addpath(genpath('toolbox_fm'));
+S = similarity_shape(B0,B1);
 
 %% Dice vs seg_threshold
 x=0.3:0.01:0.6;
@@ -58,7 +59,30 @@ axis('tight');
 [~,i]=max(dvol)
 [~,i]=max(y)
 
+%% Receiver Operating Characteristic
+x=0.3:0.01:0.6;
+sensitivity=zeros(1,size(x,2));
+specificity=zeros(1,size(x,2));
 
+Bt=B0(:);
+
+for i=1:size(x,2)
+Bi=(X_opt(:)>x(i)); 
+sensitivity(i)= sum(Bi.*Bt)        /sum(Bt);
+specificity(i)= sum((1-Bi).*(1-Bt))/sum(1-Bt);    
+end
+
+plot(1-specificity,sensitivity,'b');
+%title('ROC curve');
+xlabel('1-specificité');
+ylabel('sensibilité');
+ylim([0,1]);
+f=gca();
+h=get(f,'children');
+set(h, 'LineWidth', 2);
+set(f, 'FontSize', 14);
+set(f, 'FontWeight', 'bold');
+%xlim([0,1]);
 
 
 % Test against the true segmentation
