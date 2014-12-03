@@ -69,7 +69,7 @@ for k=2:2:Nseeds
     seeds(2,k,:)=center'+sqrt(1+0.4*width)*M*r;
 end
 
-
+seeds=round(seeds);
 
 end
 
